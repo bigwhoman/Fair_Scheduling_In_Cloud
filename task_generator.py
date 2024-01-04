@@ -3,13 +3,15 @@ from pprint import pprint
 import math
 import networkx as nx
 import matplotlib.pyplot as plt
+import random
 
 class generate_tasks :
     base_task = {
         "ID" : 1, 
         "Fathers" : [],
         "Children" : [],
-        "Computing_Time" : 1
+        "Computing_Time" : 1,
+        "Communication_Cost" : 1
     }
     
     def __init__(self) :
@@ -24,7 +26,8 @@ class generate_tasks :
                 "ID" : node,
                 "Fathers" : [],
                 "Children" : [],
-                "Computing_Time" : 1
+                "Computing_Time" : random.randint(10,100),
+                "Communication_Cost" : random.randint(5,25)
             }
         
         for i in range(1,m-1):
@@ -56,7 +59,8 @@ class generate_tasks :
                 "ID" : node,
                 "Fathers" : [],
                 "Children" : [],
-                "Computing_Time" : 1
+                "Computing_Time" : random.randint(10,100),
+                "Communication_Cost" : random.randint(5,25)
             }
             
         base_pointer = 1
