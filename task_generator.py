@@ -65,7 +65,9 @@ class generate_tasks :
                 all_nodes[i]["Fathers"].append(base_pointer)
                 all_nodes[base_pointer]["Children"].append(i)
 
-            for i in range(base_pointer + 2, base_pointer + m ) :
+            for i in range(base_pointer + 1, base_pointer + m ) :
+                if i >= total_graph_nodes :
+                    break
                 all_nodes[i + m - 1]["Fathers"].append(i)
                 all_nodes[i]["Children"].append(i + m - 1)           
             
@@ -87,14 +89,21 @@ class generate_tasks :
         plt.show()
 
 if __name__ == "__main__" :
-    # if len(sys.argv) < 3 :
-    #     print("Format shoud be as follows : method num_of_tasks")
-    #     exit(1)
-    # generation_method = sys.argv[1]
-    # number_of_tasks = int(sys.argv[2])
-    number_of_tasks = 4
+    if len(sys.argv) < 3 :
+        print("Format shoud be as follows : method + num_of_tasks")
+        exit(1)
+    generation_method = sys.argv[1]
+    number_of_tasks = int(sys.argv[2])
     task_generator = generate_tasks()
-    graph = task_generator.FFT(number_of_tasks)
+    graph = None
+    if generation_method == "GE" :
+        graph = task_generator.GE(number_of_tasks)
+    elif generation_method == "FFT" :
+        graph = task_generator.FFT(number_of_tasks)
+    else :
+        print("Method should be : FFT - GE")
+        exit(1)
+    pprint(graph)
     task_generator.draw_graph(graph=graph)
 
 
