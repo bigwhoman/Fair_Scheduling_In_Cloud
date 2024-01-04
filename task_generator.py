@@ -31,8 +31,17 @@ class generate_tasks :
                     all_nodes[j]["Children"].append(k)
                     all_nodes[k]["Fathers"].append(j)
 
+        base_pointer = 2 * m
+        forward      = -1
         for i in range(0, int(math.log2(m))) :
-            pass
+            for j in range(1, m + 1, 2 ** (i)) :
+                forward *= -1
+                for k in range(j,j + 2 ** (i)) :
+                    all_nodes[base_pointer + k - 1]["Fathers"].append(base_pointer + k - m - 1)
+                    all_nodes[base_pointer + k - 1]["Fathers"].append(base_pointer + k - m - 1 + forward * 2 ** (i))
+                    all_nodes[base_pointer + k - m - 1 + forward * 2 ** (i)]["Children"].append(base_pointer + k - 1)
+                    all_nodes[base_pointer + k - m - 1]["Children"].append(base_pointer + k - 1)
+            base_pointer += m
 
         return all_nodes
     
@@ -62,6 +71,9 @@ class generate_tasks :
             m -= 1
         
         return all_nodes
+
+    def draw_graph(self, nodes:dict) :
+        pass
 
 if __name__ == "__main__" :
     # if len(sys.argv) < 3 :
