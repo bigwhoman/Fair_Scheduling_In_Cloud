@@ -1,6 +1,8 @@
 import sys
 from pprint import pprint
 import math
+import networkx as nx
+import matplotlib.pyplot as plt
 
 class generate_tasks :
     base_task = {
@@ -72,8 +74,17 @@ class generate_tasks :
         
         return all_nodes
 
-    def draw_graph(self, nodes:dict) :
-        pass
+    def draw_graph(self, graph:dict) :
+        G = nx.DiGraph()
+
+        for node, attrs in graph.items():
+            G.add_node(node)
+            for child in attrs['Children']:
+                G.add_edge(node, child)
+
+        pos = nx.drawing.nx_agraph.graphviz_layout(G, prog='dot')
+        nx.draw(G, pos, with_labels=True, arrows=True)
+        plt.show()
 
 if __name__ == "__main__" :
     # if len(sys.argv) < 3 :
@@ -83,6 +94,7 @@ if __name__ == "__main__" :
     # number_of_tasks = int(sys.argv[2])
     number_of_tasks = 4
     task_generator = generate_tasks()
-    pprint(task_generator.FFT(number_of_tasks))
+    graph = task_generator.FFT(number_of_tasks)
+    task_generator.draw_graph(graph=graph)
 
 
