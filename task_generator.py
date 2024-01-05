@@ -4,6 +4,7 @@ import math
 import networkx as nx
 import matplotlib.pyplot as plt
 import random
+import numpy as np
 
 
 class Task:
@@ -11,19 +12,25 @@ class Task:
         self.id = id
         self.fathers: list[int] = []
         self.children: list[int] = []
-        self.average_computation_time = random.randint(10, 100)
-        self.real_computation_time = min(
-            max(1, int(random.normalvariate(self.average_computation_time, 5))),
-            self.average_computation_time + 25,
-        )
-        # This should be used like this: First index is the ID of the task which we want to comminate with (the child ID)
+        # This should be used like this: 
+        # First index is the ID of the task which we want to comminate with (the child ID)
         # The second index is the core ID which this task is currently on
         # The third index is the core ID which child task should run on
-        self.communication_cost: dict[int, list[list[int]]] = []
+        self.communication_cost: dict[int, list[list[int]]] = {}
+        self.computation_times: list[int] = []
+
+    def populate_cpu_dependant_variables(self, cpu_count: int):
+        for _ in range(cpu_count):
+            self.computation_times.append(random.randint(10, 100))
+            self.computation_times[-1] = min(
+                max(1, int(random.normalvariate(self.computation_times[-1], 5))),
+                self.computation_times[-1] + 25,
+            )
+        self.generate_random_communication_cost(cpu_count)
 
     def generate_random_communication_cost(self, cpu_count: int):
         self.communication_cost.clear()
-        for child_id in range(self.children):
+        for child_id in self.children:
             costs = [[0] * cpu_count for _ in range(cpu_count)]
             for cpu1 in range(cpu_count):
                 for cpu2 in range(cpu_count):
@@ -31,6 +38,14 @@ class Task:
                         continue
                     costs[cpu1][cpu2] = random.randint(5, 25)
             self.communication_cost[child_id] = costs
+
+    def average_communication(self, j: int) -> float:
+        # https://stackoverflow.com/a/38542569/4213397
+        numpy_array = np.array(self.communication_cost[j])
+        return numpy_array.sum() / (numpy_array != 0).sum()
+    
+    def average_computation(self) -> float:
+        return sum(self.computation_times) / len(self.computation_times)
 
 
 class generate_tasks:
