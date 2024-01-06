@@ -1,7 +1,9 @@
 import json
 import sys
 from task_generator import Task, generate_tasks
-
+from pprint import pprint
+import matplotlib.pyplot as plt
+import numpy as np
 
 class ScheduledTask:
     def __init__(self, task: Task, cpu_id: int, start_time: int):
@@ -133,6 +135,32 @@ class HEFT:
                 task, best_cpu_id, cpu_runtimes[best_cpu_id][0]
             )
         return scheduled_tasks
+    
+    @staticmethod
+    def draw_chart(tasks : dict[int, ScheduledTask]):
+        colors = np.random.rand(len(tasks), 3)
+        all_schedules = [[[task.start_time, task.computation_finish_time]] for task in tasks.values()]
+
+        max_end = max([max(sched[-1][-1] for sched in all_schedules)])
+
+        fig, ax = plt.subplots(1, figsize=(8, 4))
+        for i, task in enumerate(tasks):
+
+            schedules = [[tasks[task].start_time, tasks[task].computation_finish_time]]
+            for start, end in schedules:
+                ax.broken_barh([(start, end-start)],
+                            (i-0.4, 0.8), facecolors=colors[i])
+
+            ax.text(-0.1, i, task, ha='right', va='center')
+
+        ax.set_xlim(0, max_end)
+        ax.set_xticks(np.arange(0, max_end + 1, 1))
+        ax.set_xlabel('Time')
+        ax.set_ylabel('Tasks')
+        ax.set_yticklabels([])
+        ax.set_title('Gantt Chart')
+
+        plt.show()
 
 
 if __name__ == "__main__":
@@ -153,5 +181,8 @@ if __name__ == "__main__":
     print("Currently have", len(graph), "tasks")
     for task in graph.values():
         task.populate_cpu_dependant_variables(cpu_cores)
-    print("Ranked tasks:", HEFT.rank(graph))
-    print(HEFT.schedule(graph, cpu_cores))
+    print("Ranked tasks:")
+    pprint(HEFT.rank(graph))
+    sched = HEFT.schedule(graph, cpu_cores)
+    pprint(sched)
+    HEFT.draw_chart(sched)
