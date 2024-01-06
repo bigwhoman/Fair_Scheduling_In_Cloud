@@ -1,3 +1,4 @@
+import json
 import sys
 from task_generator import Task, generate_tasks
 
@@ -8,6 +9,16 @@ class ScheduledTask:
         self.start_time = start_time
         self.computation_finish_time = start_time + task.computation_times[cpu_id]
         self.ran_cpu_id = cpu_id
+
+    def __repr__(self) -> str:
+        return str(
+            {
+                "id": self.task_id,
+                "start": self.start_time,
+                "end": self.computation_finish_time,
+                "cpu_id": self.ran_cpu_id,
+            }
+        )
 
 
 class HEFT:
@@ -84,7 +95,7 @@ class HEFT:
         return candidate_start_time
 
     @staticmethod
-    def schedule(tasks: dict[int, Task], cpus: int):
+    def schedule(tasks: dict[int, Task], cpus: int) -> dict[int, ScheduledTask]:
         ranks = HEFT.rank(tasks)
         # task_id -> task
         scheduled_tasks: dict[int, ScheduledTask] = {}
@@ -121,7 +132,7 @@ class HEFT:
             scheduled_tasks[task.id] = ScheduledTask(
                 task, best_cpu_id, cpu_runtimes[best_cpu_id][0]
             )
-        print(scheduled_tasks)
+        return scheduled_tasks
 
 
 if __name__ == "__main__":
@@ -143,4 +154,4 @@ if __name__ == "__main__":
     for task in graph.values():
         task.populate_cpu_dependant_variables(cpu_cores)
     print("Ranked tasks:", HEFT.rank(graph))
-    HEFT.schedule(graph, cpu_cores)
+    print(HEFT.schedule(graph, cpu_cores))

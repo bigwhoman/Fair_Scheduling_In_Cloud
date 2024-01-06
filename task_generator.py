@@ -12,7 +12,7 @@ class Task:
         self.id = id
         self.fathers: list[int] = []
         self.children: list[int] = []
-        # This should be used like this: 
+        # This should be used like this:
         # First index is the ID of the task which we want to comminate with (the child ID)
         # The second index is the core ID which this task is currently on
         # The third index is the core ID which child task should run on
@@ -43,12 +43,23 @@ class Task:
         # https://stackoverflow.com/a/38542569/4213397
         numpy_array = np.array(self.communication_cost[j])
         return numpy_array.sum() / (numpy_array != 0).sum()
-    
+
     def average_computation(self) -> float:
         return sum(self.computation_times) / len(self.computation_times)
-    
+
     def are_all_parents_are_done(self, done_tasks: set[int]) -> bool:
         return all(map(lambda father: father in done_tasks, self.fathers))
+
+    def __repr__(self) -> str:
+        return str(
+            {
+                "id": self.id,
+                "parents": self.fathers,
+                "children": self.children,
+                "communication_cost": self.communication_cost,
+                "computation_times": self.computation_times,
+            }
+        )
 
 
 class generate_tasks:
