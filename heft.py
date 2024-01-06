@@ -154,7 +154,7 @@ class HEFT:
             ax.text(-0.1, i, task, ha='right', va='center')
 
         ax.set_xlim(0, max_end)
-        ax.set_xticks(np.arange(0, max_end + 1, 1))
+        # ax.set_xticks(np.arange(0, max_end + 1, 1))
         ax.set_xlabel('Time')
         ax.set_ylabel('Tasks')
         ax.set_yticklabels([])
