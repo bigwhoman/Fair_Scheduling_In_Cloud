@@ -150,7 +150,7 @@ class HEFT:
             for start, end in schedules:
                 ax.broken_barh([(start, end-start)],
                             (i-0.4, 0.8), facecolors=colors[i])
-
+                ax.annotate(tasks[task].ran_cpu_id, xy=(start + (end-start)/2, i-0.4), ha='center')
             ax.text(-0.1, i, task, ha='right', va='center')
 
         ax.set_xlim(0, max_end)
