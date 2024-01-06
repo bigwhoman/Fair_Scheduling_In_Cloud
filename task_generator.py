@@ -46,6 +46,9 @@ class Task:
     
     def average_computation(self) -> float:
         return sum(self.computation_times) / len(self.computation_times)
+    
+    def are_all_parents_are_done(self, done_tasks: set[int]) -> bool:
+        return all(map(lambda father: father in done_tasks, self.fathers))
 
 
 class generate_tasks:
