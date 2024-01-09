@@ -185,4 +185,5 @@ if __name__ == "__main__":
     pprint(HEFT.rank(graph))
     sched = HEFT.schedule(graph, cpu_cores)
     pprint(sched)
+    print("Makespan:", max(map(lambda task: task.computation_finish_time, sched.values())))
     HEFT.draw_chart(sched)
