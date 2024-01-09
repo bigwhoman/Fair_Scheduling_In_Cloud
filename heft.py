@@ -187,3 +187,12 @@ if __name__ == "__main__":
     pprint(sched)
     print("Makespan:", max(map(lambda task: task.computation_finish_time, sched.values())))
     HEFT.draw_chart(sched)
+    # MultiTask
+    #graph = task_generator.merge_tasks([task_generator.FFT(5).values(), task_generator.FFT(5).values(), task_generator.FFT(5).values()])
+    #for task in graph.values():
+    #    task.populate_cpu_dependant_variables(cpu_cores)
+    #print("Ranked tasks:")
+    #pprint(HEFT.rank(graph))
+    #sched = HEFT.schedule(graph, cpu_cores)
+    #pprint(sched)
+    #HEFT.draw_chart(sched)

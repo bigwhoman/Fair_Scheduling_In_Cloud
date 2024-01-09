@@ -1,6 +1,7 @@
 import sys
 from pprint import pprint
 import math
+from typing import Iterator
 import networkx as nx
 import matplotlib.pyplot as plt
 import random
@@ -123,6 +124,23 @@ class generate_tasks:
             m -= 1
 
         return all_nodes
+    
+    @staticmethod
+    def merge_tasks(tasks: Iterator[Iterator[Task]]) -> dict[int, Task]:
+        result: dict[int, Task] = {}
+        current_offset = 0
+        for task_list in tasks:
+            task_count = 0
+            for task in task_list:
+                task.id += current_offset
+                for i in range(len(task.children)):
+                    task.children[i] += current_offset
+                for i in range(len(task.fathers)):
+                    task.fathers[i] += current_offset
+                result[task.id] = task
+                task_count += 1
+            current_offset += task_count
+        return result
 
     @staticmethod
     def draw_graph(graph: dict[int, Task]):
