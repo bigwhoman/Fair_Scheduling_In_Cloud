@@ -1,4 +1,3 @@
-import json
 import sys
 from task_generator import Task, generate_tasks
 from pprint import pprint
@@ -161,6 +160,16 @@ class HEFT:
         ax.set_title('Gantt Chart')
 
         plt.show()
+
+
+    @staticmethod
+    def calculate_makespan(tasks: dict[int, Task], cpus: int) -> int:
+        return HEFT.calculate_makespan_from_completed_tasks(HEFT.schedule(tasks, cpus))
+    
+    @staticmethod
+    def calculate_makespan_from_completed_tasks(tasks: dict[int, ScheduledTask]) -> int:
+        return max(map(lambda task: task.computation_finish_time, tasks.values()))
+    
 
 
 if __name__ == "__main__":
