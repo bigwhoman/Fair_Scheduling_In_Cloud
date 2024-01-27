@@ -13,6 +13,7 @@ class DAG:
 class MinMax:
     @staticmethod
     def schedule(dags: list[DAG], cpus: int) -> dict[dict[int, ScheduledTask]]:
+        result: dict[dict[int, ScheduledTask]] = {}
         current_time = 0
         while len(dags) != 0:
             # Always advance time in order to check for dynamic scheduling
@@ -32,6 +33,12 @@ class MinMax:
                 time_to_advance = max(time_to_advance, scheduled_task.computation_finish_time)
                 scheduled_task.start_time += current_time
                 scheduled_task.computation_finish_time += current_time
+            result[runnable_dags[candidate_index].id] = scheduled_dag
             # Now advance the time
             current_time += time_to_advance
+        return result
 
+class FDWS:
+    @staticmethod
+    def schedule(dags: list[DAG], cpus: int) -> dict[dict[int, ScheduledTask]]:
+        pass
