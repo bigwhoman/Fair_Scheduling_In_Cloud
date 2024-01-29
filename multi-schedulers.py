@@ -12,7 +12,8 @@ class DAG:
 
 class MinMax:
     @staticmethod
-    def schedule(dags: list[DAG], cpus: int) -> dict[dict[int, ScheduledTask]]:
+    def schedule(dags: dict[int, DAG], cpus: int) -> dict[dict[int, ScheduledTask]]:
+        dags = list(dags.values())
         result: dict[dict[int, ScheduledTask]] = {}
         current_time = 0
         while len(dags) != 0:
@@ -40,5 +41,61 @@ class MinMax:
 
 class FDWS:
     @staticmethod
-    def schedule(dags: list[DAG], cpus: int) -> dict[dict[int, ScheduledTask]]:
-        pass
+    def reduce_task_list(scheduled_tasks: dict[int, dict[int, ScheduledTask]]) -> list[ScheduledTask]:
+        result: list[ScheduledTask] = []
+        for tasks in scheduled_tasks.values():
+            result.extend(tasks.values())
+        return result
+
+    @staticmethod
+    def schedule(dags: dict[int, DAG], cpus: int) -> dict[dict[int, ScheduledTask]]:
+        result: dict[int, dict[int, ScheduledTask]] = {}
+        while True:
+            # Fill the ready queue
+            # (rank, dag_id, task)
+            ready_queue: list[tuple[float, int, Task]] = []
+            for dag_id, dag in dags.items():
+                if len(dag.ranks) != 0:
+                    (rank, task) = dag.ranks.pop(0)
+                    # TODO: check + release_time
+                    ready_queue.append((rank + dag.release_time, dag_id, task))
+            if len(ready_queue) == 0: # everything is done
+                break
+            # Now sort the ready queue based on rank
+            ready_queue = sorted(ready_queue, key=lambda x: x[0], reverse=True)
+            # For each task in queue, schedule it by EFT
+            # Just like EFT.schedule
+            for _, dag_id, task in ready_queue:
+                # cpu_id -> (start, finish) for each CPU core
+                cpu_runtimes: list[tuple[int, int]] = [(0, 0)] * cpus
+                for cpu_id in range(cpus):
+                    processor_ready = dags[dag_id].release_time  # when does this core can become available for scheduling this task
+                    for parent_id in task.fathers:
+                        assert parent_id in result[dag_id]  # sanity check
+                        communication_cost = dags[dag_id].tasks[parent_id].communication_cost[task.id][
+                            result[dag_id][parent_id].ran_cpu_id
+                        ][cpu_id]
+                        start_delay = (
+                            communication_cost
+                            + result[dag_id][parent_id].computation_finish_time
+                        )
+                        processor_ready = max(processor_ready, start_delay)
+                    # Now calculate when we can schedule this task
+                    cpu_start_time = HEFT.find_gap(
+                        FDWS.reduce_task_list(result),
+                        cpu_id,
+                        processor_ready,
+                        task.computation_times[cpu_id],
+                    )
+                    cpu_runtimes[cpu_id] = (
+                        cpu_start_time,
+                        cpu_start_time + task.computation_times[cpu_id],
+                    )
+                # Now check what CPU yields the fastest one
+                best_cpu_id = min(
+                    range(len(cpu_runtimes)), key=lambda x: cpu_runtimes[x][1]
+                )
+                result[dag_id][task.id] = ScheduledTask(
+                    task, best_cpu_id, cpu_runtimes[best_cpu_id][0]
+                )
+        return result

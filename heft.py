@@ -1,4 +1,5 @@
 import sys
+from typing import Iterator
 from task_generator import Task, generate_tasks
 from pprint import pprint
 import matplotlib.pyplot as plt
@@ -69,7 +70,7 @@ class HEFT:
 
     @staticmethod
     def find_gap(
-        scheduled_tasks: dict[int, ScheduledTask],
+        scheduled_tasks: Iterator[ScheduledTask],
         cpu_id: int,
         fastest_start_time: int,
         computation_cost: int,
@@ -81,7 +82,7 @@ class HEFT:
             map(
                 lambda task: (task.start_time, task.computation_finish_time),
                 filter(
-                    lambda item: item.ran_cpu_id == cpu_id, scheduled_tasks.values()
+                    lambda item: item.ran_cpu_id == cpu_id, scheduled_tasks
                 ),
             ),
             key=lambda item: item[0],  # sort by start time
@@ -117,7 +118,7 @@ class HEFT:
                     processor_ready = max(processor_ready, start_delay)
                 # Now calculate when we can schedule this task
                 cpu_start_time = HEFT.find_gap(
-                    scheduled_tasks,
+                    scheduled_tasks.values(),
                     cpu_id,
                     processor_ready,
                     task.computation_times[cpu_id],
