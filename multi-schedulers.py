@@ -39,7 +39,7 @@ class MinMax:
             current_time += time_to_advance
         return result
 
-class FDWS:
+class FDWS_RANK_HYBRID:
     @staticmethod
     def reduce_task_list(scheduled_tasks: dict[int, dict[int, ScheduledTask]]) -> list[ScheduledTask]:
         result: list[ScheduledTask] = []
@@ -48,7 +48,7 @@ class FDWS:
         return result
 
     @staticmethod
-    def schedule(dags: dict[int, DAG], cpus: int) -> dict[dict[int, ScheduledTask]]:
+    def schedule(dags: dict[int, DAG], cpus: int, is_fdws: bool) -> dict[dict[int, ScheduledTask]]:
         result: dict[int, dict[int, ScheduledTask]] = {}
         while True:
             # Fill the ready queue
@@ -62,7 +62,7 @@ class FDWS:
             if len(ready_queue) == 0: # everything is done
                 break
             # Now sort the ready queue based on rank
-            ready_queue = sorted(ready_queue, key=lambda x: x[0], reverse=True)
+            ready_queue = sorted(ready_queue, key=lambda x: x[0], reverse=is_fdws)
             # For each task in queue, schedule it by EFT
             # Just like EFT.schedule
             for _, dag_id, task in ready_queue:
