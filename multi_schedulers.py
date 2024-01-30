@@ -1,6 +1,7 @@
+import copy
 import random
 from heft import HEFT, ScheduledTask
-from task_generator import Task
+from task_generator import Task, generate_tasks
 
 class DAG:
     def __init__(self, id: int, tasks: dict[int, Task], cpus: int):
@@ -13,21 +14,21 @@ class DAG:
 class MinMax:
     @staticmethod
     def schedule(dags: dict[int, DAG], cpus: int) -> dict[dict[int, ScheduledTask]]:
-        dags = list(dags.values())
+        dags_list = list(dags.values())
         result: dict[dict[int, ScheduledTask]] = {}
         current_time = 0
-        while len(dags) != 0:
+        while len(dags_list) != 0:
             # Always advance time in order to check for dynamic scheduling
             current_time += 1
             # Check if we can run any DAG
-            runnable_dags = list(filter(lambda dag: dag.release_time <= current_time, dags))
+            runnable_dags = list(filter(lambda dag: dag.release_time <= current_time, dags_list))
             if len(runnable_dags) == 0:
                 continue
             # If we have reached here, it means that we have at least one runnable dag
             candidate_index = min(range(len(runnable_dags)), key=lambda dag_index: runnable_dags[dag_index].lowerbound)
             # Schedule the task
             scheduled_dag = HEFT.schedule(runnable_dags[candidate_index].tasks, cpus)
-            dags = list(filter(lambda dag: dag.id != runnable_dags[candidate_index].id, dags))
+            dags_list = list(filter(lambda dag: dag.id != runnable_dags[candidate_index].id, dags_list))
             # Fix the scheduled tasks based on current time
             time_to_advance = 0
             for scheduled_task in scheduled_dag.values():
@@ -49,12 +50,20 @@ class FDWS_RANK_HYBRID:
 
     @staticmethod
     def schedule(dags: dict[int, DAG], cpus: int, is_fdws: bool) -> dict[dict[int, ScheduledTask]]:
+        dags = copy.deepcopy(dags)
+        # dag_id -> task_id -> task
         result: dict[int, dict[int, ScheduledTask]] = {}
+        for dag_id in dags.keys():
+            result[dag_id] = {}
         while True:
+            # At first get the current time
+            current_time = min(map(lambda dag: dag.release_time, dags.values())) # default is the release time of the first DAG
+            if len(FDWS_RANK_HYBRID.reduce_task_list(result)) != 0:
+                current_time = max(current_time, max(map(lambda task: task.computation_finish_time, FDWS_RANK_HYBRID.reduce_task_list(result))))
             # Fill the ready queue
             # (rank, dag_id, task)
             ready_queue: list[tuple[float, int, Task]] = []
-            for dag_id, dag in dags.items():
+            for dag_id, dag in filter(lambda d: d[1].release_time <= current_time, dags.items()):
                 if len(dag.ranks) != 0:
                     (rank, task) = dag.ranks.pop(0)
                     # TODO: check + release_time
@@ -82,7 +91,7 @@ class FDWS_RANK_HYBRID:
                         processor_ready = max(processor_ready, start_delay)
                     # Now calculate when we can schedule this task
                     cpu_start_time = HEFT.find_gap(
-                        FDWS.reduce_task_list(result),
+                        FDWS_RANK_HYBRID.reduce_task_list(result),
                         cpu_id,
                         processor_ready,
                         task.computation_times[cpu_id],
@@ -99,3 +108,18 @@ class FDWS_RANK_HYBRID:
                     task, best_cpu_id, cpu_runtimes[best_cpu_id][0]
                 )
         return result
+    
+def sample_run():
+    CORES = 4
+    dags: dict[int, DAG] = {}
+    for i in range(5):
+        tasks = generate_tasks.FFT(5)
+        for task in tasks.values():
+            task.populate_cpu_dependant_variables(CORES)
+        dags[i] = DAG(i, tasks, CORES)
+    print("MinMax:", MinMax.schedule(dags, CORES))
+    print("FDWS:", FDWS_RANK_HYBRID.schedule(dags, CORES, True))
+    print("Rank Hybrid:", FDWS_RANK_HYBRID.schedule(dags, CORES, False))
+
+if __name__ == "__main__":
+    sample_run()
