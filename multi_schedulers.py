@@ -7,8 +7,8 @@ class DAG:
     def __init__(self, id: int, tasks: dict[int, Task], cpus: int):
         self.id = id
         self.tasks = tasks
+        self.release_time = random.randint(0, 500)
         self.lowerbound = HEFT.calculate_makespan(tasks, cpus)
-        self.release_time = random.randint(0, 1000)
         self.ranks = HEFT.rank(tasks)
 
 class MinMax:
