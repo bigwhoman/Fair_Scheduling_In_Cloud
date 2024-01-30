@@ -55,9 +55,9 @@ class FDWS_RANK_HYBRID:
         result: dict[int, dict[int, ScheduledTask]] = {}
         for dag_id in dags.keys():
             result[dag_id] = {}
-        while True:
+        while any(map(lambda dag: len(dag.ranks) != 0, dags.values())):
             # At first get the current time
-            current_time = min(map(lambda dag: dag.release_time, dags.values())) # default is the release time of the first DAG
+            current_time = min(map(lambda dag: dag.release_time, filter(lambda dag: len(dag.ranks) != 0, dags.values()))) # default is the release time of the first DAG
             if len(FDWS_RANK_HYBRID.reduce_task_list(result)) != 0:
                 current_time = max(current_time, max(map(lambda task: task.computation_finish_time, FDWS_RANK_HYBRID.reduce_task_list(result))))
             # Fill the ready queue
@@ -68,8 +68,6 @@ class FDWS_RANK_HYBRID:
                     (rank, task) = dag.ranks.pop(0)
                     # TODO: check + release_time
                     ready_queue.append((rank + dag.release_time, dag_id, task))
-            if len(ready_queue) == 0: # everything is done
-                break
             # Now sort the ready queue based on rank
             ready_queue = sorted(ready_queue, key=lambda x: x[0], reverse=is_fdws)
             # For each task in queue, schedule it by EFT
