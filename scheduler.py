@@ -65,7 +65,6 @@ if __name__ == "__main__":
         dags_copy[i] = copy.deepcopy(graph)
         dags[i] = DAG(i,graph,cpu_cores)
     makespan = 0
-    unfairness = 0
     makespan, unfairness = calculate_slowdown(MinMax.schedule(dags=copy.deepcopy(dags), cpus=cpu_cores),
                                                    copy.deepcopy(dags_copy), cpu_cores)
     print(f"makespan MinMax {makespan}")
